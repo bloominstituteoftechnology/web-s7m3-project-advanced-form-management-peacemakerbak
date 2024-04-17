@@ -82,6 +82,10 @@ export default function App() {
       setServerSuccess(res.data.message)
       setValues(getInitialValues())
       setErrors(getInitialErrors())
+      setServerError('')
+    })
+    .catch(err => {
+      setServerError(err.response.data.message)
     })
   }
 

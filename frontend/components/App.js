@@ -2,6 +2,8 @@
 // ❗ Check the README for the appropriate sequence to follow.
 import axios from 'axios'
 import React, {useState, useEffect} from 'react'
+import * as Yup from 'yup';
+
 
 
 const e = { // This is a dictionary of validation error messages.
@@ -22,6 +24,13 @@ const e = { // This is a dictionary of validation error messages.
 
 // ✨ TASK: BUILD YOUR FORM SCHEMA HERE
 // The schema should use the error messages contained in the object above.
+const userSchema = Yup.object().shape({
+  username: Yup.string().required(e.usernameRequired).min(3, e.usernameMin).max(20, e.usernameMax),
+  favLanguage: Yup.mixed().required(e.favLanguageRequired).oneOf(['javascript', 'rust'], e.favLanguageOptions),
+  favFood: Yup.mixed().required(e.favFoodRequired).oneOf(['broccoli', 'spaghetti', 'pizza'], e.favFoodOptions),
+  agreement: Yup.boolean().oneOf([true], e.agreementRequired)
+});
+
 
 const getInitialValues = () => {
   return {
@@ -51,6 +60,11 @@ export default function App() {
   const [errors, setErrors] = useState(getInitialErrors())
   const [serverSuccess, setServerSuccess] = useState('')
   const [serverError, setServerError] = useState('')
+  const [isSubmittable, setIsSubmittable] = useState(false)
+  
+  useEffect(() => {
+  userSchema.isValid(values).then(setIsSubmittable)
+   }, [values])
 
 
   // ✨ TASK: BUILD YOUR EFFECT HERE
@@ -66,7 +80,10 @@ export default function App() {
     let {name, value, type, checked} = evt.target
     value = type === 'checkbox' ? checked : value
     setValues({...values, [name]: type === 'checkbox' ? checked : value})
-
+    Yup.reach(userSchema, name).validate(value)
+    .then(() => setErrors({...errors, [name]: ''}))
+    .catch(err => setErrors({...errors, [name]: err.errors[0]}))
+    
   }
 
   const onSubmit = evt => {
@@ -142,7 +159,8 @@ export default function App() {
         </div>
 
         <div>
-          <input type="submit" disabled={false} />
+          <input disabled={!isSubmittable} className="button" value="Submit"
+          type="submit" />
         </div>
       </form>
     </div>
